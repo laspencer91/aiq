@@ -1,4 +1,4 @@
-import { GeminiProviderConfig } from './lib/providers';
+import { GeminiProviderConfig } from './lib/providers/gemini';
 
 export interface Config {
   version: string;
@@ -8,9 +8,9 @@ export interface Config {
   history?: HistoryConfig;
 }
 
-export type BaseProviderConfig = { name: string };
+export type BaseProviderConfig = { name: string; apiKey?: string; model?: string };
 
-export type ProviderConfig = GeminiProviderConfig;
+export type ProviderConfig = GeminiProviderConfig | BaseProviderConfig;
 
 export interface CommandDef {
   name: string;
@@ -52,30 +52,4 @@ export class UserError extends Error {
     super(message);
     this.name = 'UserError';
   }
-}
-
-export interface GeminiRequest {
-  contents: Array<{
-    parts: Array<{
-      text: string;
-    }>;
-  }>;
-  generationConfig?: {
-    temperature?: number;
-    maxOutputTokens?: number;
-  };
-}
-
-export interface GeminiResponse {
-  candidates: Array<{
-    content: {
-      parts: Array<{
-        text: string;
-      }>;
-    };
-  }>;
-  error?: {
-    message: string;
-    code: number;
-  };
 }

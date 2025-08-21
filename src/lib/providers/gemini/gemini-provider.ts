@@ -1,6 +1,8 @@
-import { IAiProvider } from './provider.interface';
-import { BaseProviderConfig, GeminiRequest, GeminiResponse, UserError } from '../../types';
+import { BaseProviderConfig, UserError } from '../../../types';
 import chalk from 'chalk';
+import { DistinctQuestion } from 'inquirer';
+import { GeminiRequest, GeminiResponse } from './gemini-provider.types';
+import { IAiProvider } from '../provider.interface';
 
 export interface GeminiProviderConfig extends BaseProviderConfig {
   name: 'gemini';
@@ -10,7 +12,7 @@ export interface GeminiProviderConfig extends BaseProviderConfig {
   maxTokens: number;
 }
 
-export class GeminiProvider extends IAiProvider {
+export class GeminiProvider extends IAiProvider<GeminiProviderConfig> {
   get displayName(): string {
     return 'Gemini';
   }
@@ -21,18 +23,22 @@ export class GeminiProvider extends IAiProvider {
   constructor(config: GeminiProviderConfig) {
     super();
     this.config = config;
-
-    this.validateConfig();
   }
 
-  private validateConfig(): boolean {
-    if (!this.config.apiKey || this.config.apiKey === '${GEMINI_API_KEY}') {
-      console.log(chalk.yellow('⚠️  API key not set'));
-      console.log(chalk.dim('   Set GEMINI_API_KEY environment variable'));
-      return false;
-    } else {
-      console.log(chalk.green('✅ API key configured'));
-      return true;
+  public validateConfig(): void {
+    if (!this.config.apiKey || this.config.apiKey.startsWith('${')) {
+      throw new UserError(
+        'Gemini API key not configured',
+        'Set the GEMINI_API_KEY environment variable or add it to your config file.',
+      );
+    }
+    console.log(chalk.green('✅ API key configured'));
+
+    if (!this.config.model) {
+      throw new UserError(
+        'Gemini model not specified in config',
+        'Add a model like "gemini-1.5-pro" to your provider config',
+      );
     }
   }
 
@@ -175,5 +181,49 @@ export class GeminiProvider extends IAiProvider {
       }
       return false;
     }
+  }
+
+  public getInitQuestions(): DistinctQuestion[] {
+    return [
+      {
+        type: 'input',
+        name: 'apiKey',
+        message: 'Enter your Gemini API key:',
+        validate: (input: string) => {
+          if (!input) {
+            return 'API key is required';
+          }
+          if (input.length < 20) {
+            return "That doesn't look like a valid API key";
+          }
+          return true;
+        },
+        transformer: (input: string) => {
+          // Hide the API key as it's typed
+          return input.replace(/./g, '*');
+        },
+      },
+      {
+        type: 'list',
+        name: 'model',
+        message: 'Select Gemini model:',
+        choices: [
+          { name: 'Gemini 2.0 Flash (Recommended)', value: 'gemini-2.0-flash' },
+          { name: 'Gemini 2.5 Flash Lite (Faster)', value: 'gemini-2.5-flash-lite' },
+          { name: 'Gemini 1.5 Pro (More capable)', value: 'gemini-1.5-pro' },
+        ],
+        default: this.getDefaultProviderConfig().model,
+      },
+    ];
+  }
+
+  public getDefaultProviderConfig(): GeminiProviderConfig {
+    return {
+      name: 'gemini',
+      apiKey: '${GEMINI_API_KEY}',
+      model: 'gemini-2.0-flash',
+      temperature: 0.7,
+      maxTokens: 500,
+    };
   }
 }

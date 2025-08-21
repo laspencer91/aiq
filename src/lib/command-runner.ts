@@ -3,7 +3,7 @@ import { TemplateEngine } from './template-engine.js';
 import { HistoryManager } from './history-manager.js';
 import chalk from 'chalk';
 import ora from 'ora';
-import { IAiProvider, resolveProvider } from './providers';
+import { IAiProvider } from './providers';
 
 export interface RunOptions {
   dryRun?: boolean;
@@ -16,9 +16,9 @@ export class CommandRunner {
   private provider: IAiProvider;
   private history?: HistoryManager;
 
-  constructor(config: Config) {
+  constructor(config: Config, provider: IAiProvider) {
     this.config = config;
-    this.provider = resolveProvider(config.provider);
+    this.provider = provider;
 
     if (config.history?.enabled) {
       this.history = new HistoryManager(config.history);

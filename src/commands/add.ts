@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import { ConfigManager } from '../lib/config-manager.js';
-import { UserError, ParamDef, CommandDef } from '../types.js';
+import { UserError, ParamDef, CommandDef, Config } from '../types.js';
 
 interface BasicCommandInfo {
   name: string;
@@ -56,13 +56,13 @@ interface ConfirmRemoveAnswer {
   confirm: boolean;
 }
 
-export function addCommand(program: Command): void {
+export function addCommand(program: Command, config: Config): void {
   program
     .command('add')
     .description('Add a new command interactively')
     .action(async () => {
       try {
-        await addNewCommand();
+        await addNewCommand(config);
       } catch (error) {
         handleError(error);
       }
@@ -73,7 +73,7 @@ export function addCommand(program: Command): void {
     .description('Edit an existing command')
     .action(async (commandName: string) => {
       try {
-        await editCommand(commandName);
+        await editCommand(commandName, config);
       } catch (error) {
         handleError(error);
       }
@@ -85,14 +85,14 @@ export function addCommand(program: Command): void {
     .description('Remove a command')
     .action(async (commandName: string) => {
       try {
-        await removeCommand(commandName);
+        await removeCommand(commandName, config);
       } catch (error) {
         handleError(error);
       }
     });
 }
 
-async function addNewCommand(): Promise<void> {
+async function addNewCommand(config: Config): Promise<void> {
   console.log(chalk.bold('\n📝 Creating new command...\n'));
 
   const basicInfo = await inquirer.prompt<BasicCommandInfo>([
@@ -121,10 +121,6 @@ async function addNewCommand(): Promise<void> {
         '# Use {input} for user input (optional - will be appended if not included)\n# Use {paramName} for parameters\n# Example: Translate this {language} code to {target}:\n#\n# {input}\n\n',
     },
   ]);
-
-  // Check if command already exists
-  const configManager = ConfigManager.getInstance();
-  const config = await configManager.load();
 
   if (config.commands.find((c) => c.name === basicInfo.name)) {
     throw new UserError(
@@ -304,7 +300,7 @@ async function addNewCommand(): Promise<void> {
   }
 
   // Save the command
-  await configManager.addCommand(newCommand);
+  await ConfigManager.getInstance().addCommand(newCommand, config);
 
   console.log(chalk.green(`\n✅ Command '${newCommand.name}' added successfully!\n`));
   console.log(chalk.dim('Try it with:'));
@@ -324,10 +320,7 @@ async function addNewCommand(): Promise<void> {
   }
 }
 
-async function editCommand(commandName: string): Promise<void> {
-  const configManager = ConfigManager.getInstance();
-  const config = await configManager.load();
-
+async function editCommand(commandName: string, config: Config): Promise<void> {
   const command = config.commands.find((c) => c.name === commandName);
   if (!command) {
     throw new UserError(
@@ -413,14 +406,11 @@ async function editCommand(commandName: string): Promise<void> {
       return;
   }
 
-  await configManager.save(config);
+  await ConfigManager.getInstance().save(config);
   console.log(chalk.green(`✅ Command '${commandName}' updated`));
 }
 
-async function removeCommand(commandName: string): Promise<void> {
-  const configManager = ConfigManager.getInstance();
-  const config = await configManager.load();
-
+async function removeCommand(commandName: string, config: Config): Promise<void> {
   const commandIndex = config.commands.findIndex((c) => c.name === commandName);
   if (commandIndex === -1) {
     throw new UserError(
@@ -444,7 +434,7 @@ async function removeCommand(commandName: string): Promise<void> {
   }
 
   config.commands.splice(commandIndex, 1);
-  await configManager.save(config);
+  await ConfigManager.getInstance().save(config);
 
   console.log(chalk.green(`✅ Command '${commandName}' removed`));
 }

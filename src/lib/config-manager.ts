@@ -48,7 +48,7 @@ export class ConfigManager {
     return obj;
   }
 
-  async load(): Promise<Config> {
+  async load(): Promise<Config | null> {
     if (this.config) {
       return this.config;
     }
@@ -65,12 +65,11 @@ export class ConfigManager {
     } catch (error) {
       if (error instanceof Error) {
         if ('code' in error && error.code === 'ENOENT') {
-          throw new UserError('Config file not found', 'Run "aiq config init" to create one');
+          console.log('Config file not found', 'Run "aiq config init" to create one');
+          return null;
         }
-        throw new UserError(
-          'Invalid JSON in config file',
-          'Run "aiq config validate" to check for errors',
-        );
+        console.log('Invalid JSON in config file', 'Run "aiq config validate" to check for errors');
+        return null;
       }
       throw error;
     }
@@ -99,18 +98,8 @@ export class ConfigManager {
 
   validate(config: Config): void {
     // Check required provider fields
-    if (!config.provider?.apiKey) {
-      throw new UserError(
-        'API key not configured',
-        'Set GEMINI_API_KEY environment variable or add it to config',
-      );
-    }
-
-    if (!config.provider?.model) {
-      throw new UserError(
-        'Model not specified in config',
-        'Add a model like "gemini-2.0-flash" to your provider config',
-      );
+    if (!config.provider) {
+      throw new UserError('Provider not specified in config', 'Add a provider configuration.');
     }
 
     // Validate commands
@@ -153,9 +142,7 @@ export class ConfigManager {
     }
   }
 
-  async addCommand(command: CommandDef): Promise<void> {
-    const config = await this.load();
-
+  async addCommand(command: CommandDef, config: Config): Promise<void> {
     // Check for duplicate
     const existing = config.commands.find((c) => c.name === command.name);
     if (existing) {
@@ -169,8 +156,7 @@ export class ConfigManager {
     await this.save(config);
   }
 
-  async getCommand(name: string): Promise<CommandDef> {
-    const config = await this.load();
+  getCommand(name: string, config: Config): CommandDef {
     const command = config.commands.find((c) => c.name === name);
 
     if (!command) {
@@ -181,55 +167,5 @@ export class ConfigManager {
     }
 
     return command;
-  }
-
-  getDefaultConfig(): Config {
-    return {
-      version: '1.0',
-      provider: {
-        name: 'gemini',
-        apiKey: '${GEMINI_API_KEY}',
-        model: 'gemini-2.0-flash',
-        temperature: 0.7,
-        maxTokens: 500,
-      },
-      editor: '${EDITOR:-nano}',
-      commands: [
-        {
-          name: 'summarize',
-          description: 'Summarize text concisely',
-          prompt: 'Summarize this in {maxWords} words or less:\n\n{input}',
-          params: {
-            maxWords: {
-              type: 'number',
-              default: 50,
-              alias: 'w',
-              description: 'Maximum words for summary',
-            },
-          },
-        },
-        {
-          name: 'explain',
-          description: 'Explain code or concept clearly',
-          prompt: 'Explain this clearly:\n\n{input}',
-        },
-        {
-          name: 'cmd',
-          description: 'Get terminal command only',
-          prompt:
-            'Provide ONLY the terminal command for: {input}\nNo explanation, just the command.',
-        },
-        {
-          name: 'fix',
-          description: 'Fix errors in code or text',
-          prompt: 'Fix any errors in this and return only the corrected version:\n\n{input}',
-        },
-      ],
-      history: {
-        enabled: true,
-        maxEntries: 100,
-        location: '${HOME}/.aiq/history.json',
-      },
-    };
   }
 }

@@ -1,11 +1,10 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { ConfigManager } from '../lib/config-manager.js';
 import { HistoryManager } from '../lib/history-manager.js';
 import { CommandRunner } from '../lib/command-runner.js';
-import { UserError } from '../types.js';
+import { Config, UserError } from '../types.js';
 
-export function historyCommands(program: Command): void {
+export function historyCommands(program: Command, runner: CommandRunner, config: Config): void {
   const history = program.command('history').description('Manage command history');
 
   history
@@ -13,9 +12,9 @@ export function historyCommands(program: Command): void {
     .alias('list')
     .description('Show recent command history')
     .option('-n, --number <n>', 'Number of entries to show', '10')
-    .action(async (options) => {
+    .action(async (options: { number: string }) => {
       try {
-        await showHistory(parseInt(options.number));
+        await showHistory(parseInt(options.number), config);
       } catch (error) {
         handleError(error);
       }
@@ -24,9 +23,9 @@ export function historyCommands(program: Command): void {
   history
     .command('search <query>')
     .description('Search command history')
-    .action(async (query) => {
+    .action(async (query: string) => {
       try {
-        await searchHistory(query);
+        await searchHistory(query, config);
       } catch (error) {
         handleError(error);
       }
@@ -37,7 +36,7 @@ export function historyCommands(program: Command): void {
     .description('Clear command history')
     .action(async () => {
       try {
-        await clearHistory();
+        await clearHistory(config);
       } catch (error) {
         handleError(error);
       }
@@ -49,7 +48,7 @@ export function historyCommands(program: Command): void {
     .description('Show last command response')
     .action(async () => {
       try {
-        await showLast();
+        await showLast(config);
       } catch (error) {
         handleError(error);
       }
@@ -59,9 +58,9 @@ export function historyCommands(program: Command): void {
   program
     .command('replay <id>')
     .description('Replay a command from history')
-    .action(async (id) => {
+    .action(async (id: string) => {
       try {
-        await replayCommand(id);
+        await replayCommand(id, runner, config);
       } catch (error) {
         handleError(error);
       }
@@ -70,17 +69,14 @@ export function historyCommands(program: Command): void {
   // Default history action
   history.action(async () => {
     try {
-      await showHistory(10);
+      await showHistory(10, config);
     } catch (error) {
       handleError(error);
     }
   });
 }
 
-async function showHistory(count: number): Promise<void> {
-  const configManager = ConfigManager.getInstance();
-  const config = await configManager.load();
-
+async function showHistory(count: number, config: Config): Promise<void> {
   if (!config.history?.enabled) {
     console.log(chalk.yellow('History is disabled in config'));
     return;
@@ -124,10 +120,7 @@ async function showHistory(count: number): Promise<void> {
   console.log(chalk.dim('Use "aiq replay <id>" to re-run a command'));
 }
 
-async function searchHistory(query: string): Promise<void> {
-  const configManager = ConfigManager.getInstance();
-  const config = await configManager.load();
-
+async function searchHistory(query: string, config: Config): Promise<void> {
   if (!config.history?.enabled) {
     console.log(chalk.yellow('History is disabled in config'));
     return;
@@ -166,10 +159,7 @@ async function searchHistory(query: string): Promise<void> {
   }
 }
 
-async function clearHistory(): Promise<void> {
-  const configManager = ConfigManager.getInstance();
-  const config = await configManager.load();
-
+async function clearHistory(config: Config): Promise<void> {
   if (!config.history?.enabled) {
     console.log(chalk.yellow('History is disabled in config'));
     return;
@@ -195,10 +185,7 @@ async function clearHistory(): Promise<void> {
   console.log(chalk.green('✅ History cleared'));
 }
 
-async function showLast(): Promise<void> {
-  const configManager = ConfigManager.getInstance();
-  const config = await configManager.load();
-
+async function showLast(config: Config): Promise<void> {
   if (!config.history?.enabled) {
     console.log(chalk.yellow('History is disabled in config'));
     return;
@@ -217,10 +204,7 @@ async function showLast(): Promise<void> {
   console.log(last.response);
 }
 
-async function replayCommand(id: string): Promise<void> {
-  const configManager = ConfigManager.getInstance();
-  const config = await configManager.load();
-
+async function replayCommand(id: string, runner: CommandRunner, config: Config): Promise<void> {
   if (!config.history?.enabled) {
     throw new UserError('History is disabled in config');
   }
@@ -237,8 +221,6 @@ async function replayCommand(id: string): Promise<void> {
 
   console.log(chalk.dim(`Replaying command: ${entry.command}`));
   console.log(chalk.dim(`Original prompt:\n${entry.prompt}\n`));
-
-  const runner = new CommandRunner(config);
 
   // Extract input from the original prompt
   // This is a simplified approach - might need refinement
@@ -274,14 +256,14 @@ function getExcerpt(text: string, query: string, contextLength: number = 50): st
   return excerpt.replace(/\n/g, ' ');
 }
 
-function handleError(error: any): void {
+function handleError(error: unknown): void {
   if (error instanceof UserError) {
     console.error(chalk.red(`✖ ${error.message}`));
     if (error.hint) {
       console.error(chalk.yellow(`  💡 ${error.hint}`));
     }
   } else {
-    console.error(chalk.red('✖ Error:'), error.message);
+    console.error(chalk.red('✖ Error:'), (error as Error).message);
   }
   process.exit(1);
 }

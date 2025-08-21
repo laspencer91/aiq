@@ -3,52 +3,59 @@ import chalk from 'chalk';
 import inquirer from 'inquirer';
 import { spawn } from 'child_process';
 import { ConfigManager } from '../lib/config-manager.js';
-import { GeminiProvider } from '../lib/providers';
-import { UserError } from '../types.js';
-import { resolveProvider } from '../lib/providers';
+import { IAiProvider } from '../lib/providers';
+import { Config, ProviderConfig, UserError } from '../types.js';
+import { GeminiProvider } from '../lib/providers/gemini';
 
-export function configCommands(program: Command): void {
-  const config = program.command('config').description('Manage configuration');
+export function initConfigCommand(program: Command, configManager: ConfigManager): void {
+  const configCmd = program.command('config').description('Manage configuration');
 
-  config
+  configCmd
     .command('init')
     .description('Initialize configuration')
     .action(async () => {
       try {
-        await initConfig();
+        await initConfig(configManager);
       } catch (error) {
         handleError(error);
       }
     });
+}
 
-  config
+export function configCommands(
+  program: Command,
+  configManager: ConfigManager,
+  config: Config | null,
+  provider: IAiProvider | null,
+): void {
+  configCmd
     .command('open')
     .description('Open config file in editor')
-    .action(async () => {
+    .action(() => {
       try {
-        await openConfig();
+        openConfig(config);
       } catch (error) {
         handleError(error);
       }
     });
 
-  config
+  configCmd
     .command('validate')
     .description('Validate configuration and test API connection')
     .action(async () => {
       try {
-        await validateConfig();
+        await validateConfig(config, provider);
       } catch (error) {
         handleError(error);
       }
     });
 
-  config
+  configCmd
     .command('reset')
     .description('Reset to default configuration')
     .action(async () => {
       try {
-        await resetConfig();
+        await resetConfig(configManager, provider);
       } catch (error) {
         handleError(error);
       }
@@ -75,9 +82,50 @@ interface ConfirmAnswer {
   confirm: boolean;
 }
 
-async function initConfig(): Promise<void> {
-  const configManager = ConfigManager.getInstance();
+function getDefaultConfig(providerConfig: ProviderConfig): Config {
+  return {
+    version: '1.0',
+    provider: providerConfig,
+    editor: '${EDITOR:-nano}',
+    commands: [
+      {
+        name: 'summarize',
+        description: 'Summarize text concisely',
+        prompt: 'Summarize this in {maxWords} words or less:\n\n{input}',
+        params: {
+          maxWords: {
+            type: 'number',
+            default: 50,
+            alias: 'w',
+            description: 'Maximum words for summary',
+          },
+        },
+      },
+      {
+        name: 'explain',
+        description: 'Explain code or concept clearly',
+        prompt: 'Explain this clearly:\n\n{input}',
+      },
+      {
+        name: 'cmd',
+        description: 'Get terminal command only',
+        prompt: 'Provide ONLY the terminal command for: {input}\nNo explanation, just the command.',
+      },
+      {
+        name: 'fix',
+        description: 'Fix errors in code or text',
+        prompt: 'Fix any errors in this and return only the corrected version:\n\n{input}',
+      },
+    ],
+    history: {
+      enabled: true,
+      maxEntries: 100,
+      location: '${HOME}/.aiq/history.json',
+    },
+  };
+}
 
+async function initConfig(configManager: ConfigManager): Promise<void> {
   if (await configManager.exists()) {
     const { overwrite } = await inquirer.prompt<OverwriteAnswer>([
       {
@@ -96,36 +144,11 @@ async function initConfig(): Promise<void> {
 
   console.log(chalk.bold('\n🚀 Welcome to AIQ Setup!\n'));
 
+  // TODO, choose provider...
+  const provider = new GeminiProvider();
+  const defaultConfig = getDefaultConfig(IAiProvider.getDefaultConfig());
+
   const answers = await inquirer.prompt<InitConfigAnswers>([
-    {
-      type: 'input',
-      name: 'apiKey',
-      message: 'Enter your Gemini API key:',
-      validate: (input: string) => {
-        if (!input) {
-          return 'API key is required';
-        }
-        if (input.length < 20) {
-          return "That doesn't look like a valid API key";
-        }
-        return true;
-      },
-      transformer: (input: string) => {
-        // Hide the API key as it's typed
-        return input.replace(/./g, '*');
-      },
-    },
-    {
-      type: 'list',
-      name: 'model',
-      message: 'Select Gemini model:',
-      choices: [
-        { name: 'Gemini 2.0 Flash (Recommended)', value: 'gemini-2.0-flash' },
-        { name: 'Gemini 2.5 Flash Lite (Faster)', value: 'gemini-2.5-flash-lite' },
-        { name: 'Gemini 1.5 Pro (More capable)', value: 'gemini-1.5-pro' },
-      ],
-      default: 'gemini-2.0-flash',
-    },
     {
       type: 'list',
       name: 'editor',
@@ -137,7 +160,7 @@ async function initConfig(): Promise<void> {
         { name: 'Emacs', value: 'emacs' },
         { name: 'System default', value: '${EDITOR:-nano}' },
       ],
-      default: '${EDITOR:-nano}',
+      default: defaultConfig.editor,
     },
     {
       type: 'confirm',
@@ -145,11 +168,11 @@ async function initConfig(): Promise<void> {
       message: 'Enable command history?',
       default: true,
     },
+    ...provider.getInitQuestions(),
   ]);
 
   // Create config
-  const defaultConfig = configManager.getDefaultConfig();
-  const newConfig = {
+  const newConfig: Config = {
     ...defaultConfig,
     provider: {
       ...defaultConfig.provider,
@@ -163,9 +186,7 @@ async function initConfig(): Promise<void> {
     },
   };
 
-  // Test the API connection
   console.log(chalk.dim('\nTesting API connection...'));
-  const provider = new GeminiProvider(newConfig.provider);
 
   try {
     await provider.validateConnection();
@@ -205,14 +226,7 @@ async function initConfig(): Promise<void> {
   console.log(chalk.dim('   echo "text" | aiq summarize # Summarize piped input'));
 }
 
-async function openConfig(): Promise<void> {
-  const configManager = ConfigManager.getInstance();
-
-  if (!(await configManager.exists())) {
-    throw new UserError('Config file not found', 'Run "aiq config init" first');
-  }
-
-  const config = await configManager.load();
+function openConfig(config: Config): void {
   const editor = config.editor || process.env.EDITOR || 'nano';
 
   // Resolve editor if it has environment variables
@@ -241,18 +255,12 @@ async function openConfig(): Promise<void> {
   });
 }
 
-async function validateConfig(): Promise<void> {
-  const configManager = ConfigManager.getInstance();
-
+async function validateConfig(config: Config, provider: IAiProvider): Promise<void> {
   console.log(chalk.bold('Validating configuration...\n'));
 
   try {
-    const config = await configManager.load();
     console.log(chalk.green('✅ Config file is valid JSON'));
     console.log(chalk.green('✅ Required fields present'));
-
-    // Check for API key
-    const provider = resolveProvider(config.provider);
 
     // Validate commands
     console.log(chalk.green(`✅ ${config.commands.length} commands configured`));
@@ -278,7 +286,7 @@ async function validateConfig(): Promise<void> {
   }
 }
 
-async function resetConfig(): Promise<void> {
+async function resetConfig(configManager: ConfigManager, provider: IAiProvider): Promise<void> {
   const { confirm } = await inquirer.prompt<ConfirmAnswer>([
     {
       type: 'confirm',
@@ -293,8 +301,7 @@ async function resetConfig(): Promise<void> {
     return;
   }
 
-  const configManager = ConfigManager.getInstance();
-  const defaultConfig = configManager.getDefaultConfig();
+  const defaultConfig = getDefaultConfig(provider.getDefaultProviderConfig());
 
   await configManager.save(defaultConfig);
   console.log(chalk.green('✅ Config reset to defaults'));
