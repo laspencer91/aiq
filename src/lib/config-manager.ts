@@ -1,4 +1,4 @@
-import * as fs from 'fs/promises';
+import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { CommandDef, Config, UserError } from '../types.js';
@@ -48,13 +48,13 @@ export class ConfigManager {
     return obj;
   }
 
-  async load(): Promise<Config | null> {
+  load(): Config | null {
     if (this.config) {
       return this.config;
     }
 
     try {
-      const configContent = await fs.readFile(this.configPath, 'utf-8');
+      const configContent = fs.readFileSync(this.configPath, 'utf-8');
       const parsed = JSON.parse(configContent) as Config;
       this.config = this.resolveEnvVars<Config>(parsed);
 
@@ -75,21 +75,21 @@ export class ConfigManager {
     }
   }
 
-  async save(config: Config): Promise<void> {
+  save(config: Config): void {
     const dir = path.dirname(this.configPath);
 
     // Ensure directory exists
-    await fs.mkdir(dir, { recursive: true });
+    fs.mkdirSync(dir, { recursive: true });
 
     // Save config with pretty formatting
-    await fs.writeFile(this.configPath, JSON.stringify(config, null, 2), 'utf-8');
+    fs.writeFileSync(this.configPath, JSON.stringify(config, null, 2), 'utf-8');
 
     this.config = config;
   }
 
-  async exists(): Promise<boolean> {
+  exists(): boolean {
     try {
-      await fs.access(this.configPath);
+      fs.accessSync(this.configPath);
       return true;
     } catch {
       return false;
@@ -142,7 +142,7 @@ export class ConfigManager {
     }
   }
 
-  async addCommand(command: CommandDef, config: Config): Promise<void> {
+  addCommand(command: CommandDef, config: Config): void {
     // Check for duplicate
     const existing = config.commands.find((c) => c.name === command.name);
     if (existing) {
@@ -153,7 +153,11 @@ export class ConfigManager {
     }
 
     config.commands.push(command);
-    await this.save(config);
+    this.save(config);
+  }
+
+  get(): Config | undefined {
+    return this.config;
   }
 
   getCommand(name: string, config: Config): CommandDef {

@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import { DistinctQuestion } from 'inquirer';
 import { GeminiRequest, GeminiResponse } from './gemini-provider.types';
 import { IAiProvider } from '../provider.interface';
+import { Provider } from '../provider-discovery';
 
 export interface GeminiProviderConfig extends BaseProviderConfig {
   name: 'gemini';
@@ -12,18 +13,15 @@ export interface GeminiProviderConfig extends BaseProviderConfig {
   maxTokens: number;
 }
 
+@Provider<GeminiProviderConfig>('Gemini', {
+  name: 'gemini',
+  apiKey: '${GEMINI_API_KEY}',
+  model: 'gemini-2.5-flash',
+  temperature: 0.7,
+  maxTokens: 500,
+})
 export class GeminiProvider extends IAiProvider<GeminiProviderConfig> {
-  get displayName(): string {
-    return 'Gemini';
-  }
-
   private baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
-  private config: GeminiProviderConfig;
-
-  constructor(config: GeminiProviderConfig) {
-    super();
-    this.config = config;
-  }
 
   public validateConfig(): void {
     if (!this.config.apiKey || this.config.apiKey.startsWith('${')) {
@@ -32,7 +30,6 @@ export class GeminiProvider extends IAiProvider<GeminiProviderConfig> {
         'Set the GEMINI_API_KEY environment variable or add it to your config file.',
       );
     }
-    console.log(chalk.green('✅ API key configured'));
 
     if (!this.config.model) {
       throw new UserError(
@@ -212,18 +209,8 @@ export class GeminiProvider extends IAiProvider<GeminiProviderConfig> {
           { name: 'Gemini 2.5 Flash Lite (Faster)', value: 'gemini-2.5-flash-lite' },
           { name: 'Gemini 1.5 Pro (More capable)', value: 'gemini-1.5-pro' },
         ],
-        default: this.getDefaultProviderConfig().model,
+        default: this.defaultConfig?.model || 'gemini-2.0-flash',
       },
     ];
-  }
-
-  public getDefaultProviderConfig(): GeminiProviderConfig {
-    return {
-      name: 'gemini',
-      apiKey: '${GEMINI_API_KEY}',
-      model: 'gemini-2.0-flash',
-      temperature: 0.7,
-      maxTokens: 500,
-    };
   }
 }
