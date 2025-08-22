@@ -1,7 +1,7 @@
 {
   "name": "aiquery",
   "author": "Logan Spencer",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A lightweight CLI tool for reusable AI prompts",
   "main": "dist/index.js",
   "bin": {
