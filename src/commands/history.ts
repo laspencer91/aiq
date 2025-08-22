@@ -1,8 +1,8 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { HistoryManager } from '../lib/history-manager.js';
-import { CommandRunner } from '../lib/command-runner.js';
-import { Config, UserError } from '../types.js';
+import { HistoryManager } from '../lib/history-manager';
+import { CommandRunner } from '../lib/command-runner';
+import { Config, UserError } from '../types';
 
 export function historyCommands(program: Command, runner: CommandRunner, config: Config): void {
   const history = program.command('history').description('Manage command history');

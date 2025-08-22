@@ -1,8 +1,8 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
-import { ConfigManager } from '../lib/config-manager.js';
-import { UserError, ParamDef, CommandDef, Config } from '../types.js';
+import { ConfigManager } from '../lib/config-manager';
+import { UserError, ParamDef, CommandDef, Config } from '../types';
 
 interface BasicCommandInfo {
   name: string;
@@ -279,7 +279,7 @@ async function addNewCommand(config: Config): Promise<void> {
     }
 
     // Show the prompt that would be sent
-    const { TemplateEngine } = await import('../lib/template-engine.js');
+    const { TemplateEngine } = await import('../lib/template-engine');
     const renderedPrompt = TemplateEngine.render(newCommand.prompt, testValues, newCommand.params);
     console.log(renderedPrompt);
     console.log(chalk.dim('--- End of Prompt ---\n'));

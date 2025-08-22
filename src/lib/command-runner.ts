@@ -1,6 +1,6 @@
-import { Config, UserError } from '../types.js';
-import { TemplateEngine } from './template-engine.js';
-import { HistoryManager } from './history-manager.js';
+import { Config, UserError } from '../types';
+import { TemplateEngine } from './template-engine';
+import { HistoryManager } from './history-manager';
 import chalk from 'chalk';
 import ora from 'ora';
 import { IAiProvider } from './providers';

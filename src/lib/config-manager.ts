@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { CommandDef, Config, UserError } from '../types.js';
+import { CommandDef, Config, UserError } from '../types';
 
 export class ConfigManager {
   private static instance: ConfigManager;

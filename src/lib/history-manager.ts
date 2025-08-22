@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as crypto from 'crypto';
-import { HistoryEntry, HistoryConfig } from '../types.js';
+import { HistoryEntry, HistoryConfig } from '../types';
 
 export class HistoryManager {
   private config: HistoryConfig;

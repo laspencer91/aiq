@@ -1,4 +1,4 @@
-import { ParamDef, UserError } from '../types.js';
+import { ParamDef, UserError } from '../types';
 
 export class TemplateEngine {
   /**

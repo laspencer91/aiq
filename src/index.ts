@@ -1,10 +1,12 @@
+#!/usr/bin/env node
+
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { ConfigManager } from './lib/config-manager';
-import { CommandRunner } from './lib/command-runner.js';
-import { UserError } from './types.js';
-import { historyCommands } from './commands/history.js';
-import { addCommand } from './commands/add.js';
+import { CommandRunner } from './lib/command-runner';
+import { UserError } from './types';
+import { historyCommands } from './commands/history';
+import { addCommand } from './commands/add';
 import * as fs from 'fs';
 import * as path from 'path';
 import { IAiProvider, resolveProvider } from './lib/providers';
@@ -30,10 +32,7 @@ if (config) {
 
 // Get Version For Display
 const packageJson = JSON.parse(
-  fs.readFileSync(
-    path.join(path.dirname(new URL(import.meta.url).pathname), '../package.json'),
-    'utf-8',
-  ),
+  fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8'),
 ) as { version: string };
 
 program
