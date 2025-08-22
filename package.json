@@ -1,9 +1,12 @@
 {
-  "name": "aiq",
-  "version": "0.1.1",
+  "name": "aiquery",
+  "author": "Logan Spencer",
+  "version": "0.1.2",
   "description": "A lightweight CLI tool for reusable AI prompts",
   "main": "dist/index.js",
-  "bin": "./dist/index.js",
+  "bin": {
+    "aiq": "./dist/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
@@ -15,10 +18,10 @@
     "format:check": "prettier --check 'src/**/*.ts'",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "yarn build",
-    "release": "npm version patch && npm publish",
-    "release:minor": "npm version minor && npm publish",
-    "release:major": "npm version major && npm publish",
-    "release:preview": "npm publish --dry-run"
+    "release": "tsc && npm version patch && npm publish",
+    "release:minor": "tsc && npm version minor && npm publish",
+    "release:major": "tsc && npm version major && npm publish",
+    "release:preview": "tsc && npm publish --dry-run"
   },
   "publishConfig": {
     "access": "public",
@@ -32,14 +35,12 @@
     "terminal",
     "productivity"
   ],
-  "author": "",
   "license": "MIT",
   "dependencies": {
     "chalk": "^5.3.0",
     "commander": "^12.0.0",
     "dotenv": "^16.4.1",
     "inquirer": "^9.2.15",
-    "np": "^10.2.0",
     "ora": "^8.0.1",
     "reflect-metadata": "^0.2.2"
   },
