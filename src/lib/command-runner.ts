@@ -53,7 +53,7 @@ export class CommandRunner {
     // Dry run - just show the prompt
     if (options.dryRun) {
       console.log(chalk.dim('--- Prompt to be sent ---'));
-      console.log(prompt);
+      console.log(chalk.cyan(prompt));
       console.log(chalk.dim('--- End of prompt ---'));
       return '';
     }
@@ -163,7 +163,7 @@ export class CommandRunner {
     if (confirm.toLowerCase() === 'y') {
       const response = await this.run(commandName, { input: testInput });
       console.log(chalk.bold('\nResponse:'));
-      console.log(response);
+      console.log(chalk.cyan(response));
     }
   }
 

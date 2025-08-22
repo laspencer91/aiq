@@ -36,7 +36,6 @@ export class ProviderDiscovery {
       console.warn(`Provider "${name}" is already registered. Overwriting...`);
     }
     this.providers.set(name.toLowerCase(), ProviderClass as unknown as ProviderConstructor);
-    console.log(`Registered provider: ${name}`);
   }
 
   /**

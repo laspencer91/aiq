@@ -79,6 +79,35 @@ program
     await runCommand(commandName, inputArgs, options);
   });
 
+// Create dynamic commands for each configured command
+if (config && config.commands) {
+  for (const commandDef of config.commands) {
+    const cmd = program
+      .command(`${commandDef.name} [input...]`)
+      .description(commandDef?.description ?? 'No description provided')
+      .option('-d, --dry-run', 'Show the prompt without sending');
+
+    // Add parameter-specific options
+    if (commandDef.params) {
+      for (const [paramName, paramDef] of Object.entries(commandDef.params)) {
+        const flag = paramDef.alias ? `-${paramDef.alias}, --${paramName}` : `--${paramName}`;
+
+        const description = paramDef.description || `${paramName} parameter`;
+
+        if (paramDef.type === 'boolean') {
+          cmd.option(flag, description);
+        } else {
+          cmd.option(`${flag} <value>`, description);
+        }
+      }
+    }
+
+    cmd.action(async (inputArgs: string[], options: RunCommandOptions) => {
+      await runCommand(commandDef.name, inputArgs, options);
+    });
+  }
+}
+
 // Default action - handle direct command calls
 program
   .arguments('<command> [input...]')
@@ -112,7 +141,6 @@ async function runCommand(
 
     // Parse command-specific options
     const params: Record<string, unknown> = {};
-
     // Process options for this command
     if (command.params) {
       for (const [paramName, paramDef] of Object.entries(command.params)) {
@@ -142,7 +170,7 @@ async function runCommand(
     });
 
     if (result) {
-      console.log(result);
+      console.log(chalk.cyan(result));
     }
   } catch (error) {
     handleError(error);
