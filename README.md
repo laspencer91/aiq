@@ -243,6 +243,16 @@ aiq history search "docker"
 aiq replay abc123
 ```
 
+✨
+ Combine with the **[notes-sync](https://github.com/laspencer91/notes-sync.git)** package:
+
+```
+notes-sync view | yarn dev summarize "Consider Notes Section Only"
+
+# Response:
+# For 8/22/2025, the user realized ticket scope is too broad.
+```
+
 ## Tips
 
 1. **Use pipes for file content:**

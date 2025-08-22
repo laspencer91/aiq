@@ -35,13 +35,20 @@ export class CommandRunner {
       );
     }
 
-    // Get input from options or stdin
-    const input = options.input || (await this.getStdinInput());
+    // Get input from stdin first (piped input), then fallback to options.input
+    const stdinInput = await this.getStdinInput();
+    const input = stdinInput || options.input;
+
+    // If we have both piped input and command line arguments, combine them
+    let finalInput = input;
+    if (stdinInput && options.input) {
+      finalInput = `${stdinInput}\n\nAdditional context: ${options.input}`;
+    }
 
     // Prepare values for template
     const values: Record<string, unknown> = {
       ...options.params,
-      input,
+      input: finalInput,
     };
 
     // Validate parameters
@@ -91,11 +98,25 @@ export class CommandRunner {
     if (!process.stdin.isTTY) {
       const chunks: Buffer[] = [];
 
-      for await (const chunk of process.stdin) {
-        chunks.push(chunk as Buffer);
-      }
+      return new Promise((resolve) => {
+        // Set a short timeout to avoid hanging
+        const timeout = setTimeout(() => {
+          resolve('');
+        }, 100);
 
-      return Buffer.concat(chunks).toString('utf-8').trim();
+        process.stdin.on('data', (chunk) => {
+          chunks.push(chunk);
+        });
+
+        process.stdin.on('end', () => {
+          clearTimeout(timeout);
+          const result = Buffer.concat(chunks).toString('utf-8').trim();
+          resolve(result);
+        });
+
+        // Resume stdin to start reading
+        process.stdin.resume();
+      });
     }
 
     return '';
