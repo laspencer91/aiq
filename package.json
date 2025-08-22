@@ -1,6 +1,6 @@
 {
   "name": "aiq",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A lightweight CLI tool for reusable AI prompts",
   "main": "dist/index.js",
   "bin": "./dist/index.js",
@@ -19,7 +19,6 @@
     "release:minor": "npm version minor && npm publish",
     "release:major": "npm version major && npm publish",
     "release:preview": "npm publish --dry-run"
-
   },
   "publishConfig": {
     "access": "public",
