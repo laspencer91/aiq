@@ -40,7 +40,7 @@ A lightweight, extensible CLI tool for reusable AI prompts. Turn repetitive AI i
 
 ### From npm
 ```bash
-npm install -g aiquery
+npm install -g aiq-cli
 ```
 
 ### From source
