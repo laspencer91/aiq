@@ -1,7 +1,7 @@
 {
   "name": "aiq-cli",
   "author": "Logan Spencer",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "A lightweight CLI tool for reusable AI prompts",
   "main": "dist/index.js",
   "bin": {
