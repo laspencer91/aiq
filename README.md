@@ -40,9 +40,7 @@ A lightweight, extensible CLI tool for reusable AI prompts. Turn repetitive AI i
 
 ### From npm
 ```bash
-yarn global add aiq
-# or
-npm install -g aiq
+npm install -g aiquery
 ```
 
 ### From source
