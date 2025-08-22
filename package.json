@@ -15,8 +15,11 @@
     "format:check": "prettier --check 'src/**/*.ts'",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "yarn build",
-    "release": "np",
-    "release:preview": "np --preview"
+    "release": "npm version patch && npm publish",
+    "release:minor": "npm version minor && npm publish",
+    "release:major": "npm version major && npm publish",
+    "release:preview": "npm publish --dry-run"
+
   },
   "publishConfig": {
     "access": "public",
