@@ -1,5 +1,4 @@
 import { BaseProviderConfig, UserError } from '../../../types';
-import chalk from 'chalk';
 import { DistinctQuestion } from 'inquirer';
 import { GeminiRequest, GeminiResponse } from './gemini-provider.types';
 import { IAiProvider } from '../provider.interface';

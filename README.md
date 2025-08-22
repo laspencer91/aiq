@@ -1,5 +1,30 @@
 # AiQ 🤖
+A lightweight CLI for reusable AI prompts.
 
+- Minimal setup
+- Works in your terminal
+- Save prompts as named commands you can share and reuse
+
+Have you been in your terminal and needed a quick answer—like the right flag for a tricky command, a one-liner to transform output, or a concise note—without tabbing to a browser or heavyweight IDE? aiq is a minimal, in-terminal agent that turns reusable prompts into commands you can run anywhere, so you can stay focused in the shell and get answers fast. You can easily configure your own re-usable prompts!
+
+## What is it useful for?
+- Saving repeatable prompts as named commands (e.g., summarize, commit-msg, explain, refactor)
+- Running templated, parameterized prompts consistently across your team
+- Fast one-off tasks from the terminal: summarize files, draft commit messages, generate docs
+- Piping content from files and tools (git, cat, curl) directly into AI prompts
+- Automating AI tasks in npm scripts, shell aliases, and CI jobs
+- Keeping your prompts organized and discoverable with a simple list and history
+
+## Who is it for?
+- Developers, DevOps, data scientists, and technical writers who live in the terminal
+- Teams who want consistent, shared prompt workflows in a repo or project
+- Anyone who prefers quick keyboard-driven AI interactions over switching to a browser
+
+## Requirements
+- Node.js >= 18
+
+## Install (npm)
+Global install:
 A lightweight, extensible CLI tool for reusable AI prompts. Turn repetitive AI interactions into simple terminal commands.
 
 ## Features
@@ -22,7 +47,7 @@ npm install -g aiq
 
 ### From source
 ```bash
-git clone https://github.com/yourusername/aiq.git
+git clone https://github.com/laspencer91/aiq.git
 cd aiq
 yarn install
 yarn build
@@ -306,7 +331,7 @@ aiq/
 
 ## Contributing
 
-Contributions are welcome! This project aims to be:
+[CONTRIBUTIONS](docs/CONTRIBUTING.md) are welcome! This project aims to be:
 
 - **Simple** - Easy to understand and extend
 - **Focused** - Do one thing well
