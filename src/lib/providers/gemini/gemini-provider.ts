@@ -208,7 +208,7 @@ export class GeminiProvider extends IAiProvider<GeminiProviderConfig> {
           { name: 'Gemini 2.5 Flash Lite (Faster)', value: 'gemini-2.5-flash-lite' },
           { name: 'Gemini 1.5 Pro (More capable)', value: 'gemini-1.5-pro' },
         ],
-        default: this.defaultConfig?.model || 'gemini-2.0-flash',
+        default: this.getDefaultConfig()?.model ?? 'gemini-2.0-flash',
       },
     ];
   }

@@ -4,9 +4,11 @@ import { HistoryManager } from './history-manager';
 import chalk from 'chalk';
 import ora from 'ora';
 import { IAiProvider } from './providers';
+import { copyToClipboard } from './utils';
 
 export interface RunOptions {
   dryRun?: boolean;
+  copy?: boolean;
   params?: Record<string, unknown>;
   input?: string;
 }
@@ -66,7 +68,7 @@ export class CommandRunner {
     }
 
     // Execute the prompt
-    const spinner = ora(`Sending to ${this.provider.displayName}...`).start();
+    const spinner = ora(`Sending to ${this.provider.getDisplayName()}...`).start();
     const startTime = Date.now();
 
     try {
@@ -84,6 +86,10 @@ export class CommandRunner {
           response,
           duration,
         });
+      }
+
+      if (options.copy) {
+        copyToClipboard(response);
       }
 
       return response;
@@ -179,7 +185,9 @@ export class CommandRunner {
     console.log(prompt);
     console.log(chalk.dim('--- End of Prompt ---\n'));
 
-    const confirm = await this.promptUser(`Send this to ${this.provider.displayName}? (y/n): `);
+    const confirm = await this.promptUser(
+      `Send this to ${this.provider.getDisplayName()}? (y/n): `,
+    );
 
     if (confirm.toLowerCase() === 'y') {
       const response = await this.run(commandName, { input: testInput });

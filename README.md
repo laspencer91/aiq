@@ -254,7 +254,18 @@ notes-sync view | yarn dev summarize "Consider Notes Section Only"
 ```
 
 ## Tips
+# AIQ – Lightweight CLI for Reusable AI Prompts
 
+AIQ lets you define and run reusable AI prompts from the command line.
+
+## Clipboard copy (-c / --copy)
+
+You can automatically copy the AI response to your clipboard while it also prints to your terminal.
+
+- Add `-c` or `--copy` to any command invocation.
+- Works with both `aiq run <command>` and the shorthand `aiq <command>`.
+
+Example:
 1. **Use pipes for file content:**
    ```bash
    cat README.md | aiq summarize -w 50

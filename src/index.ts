@@ -74,6 +74,7 @@ program
   .command('run <command> [input...]')
   .description('Run a configured command')
   .option('-d, --dry-run', 'Show the prompt without sending')
+  .option('-c, --copy', 'Copy response to clipboard')
   .allowUnknownOption()
   .action(async (commandName: string, inputArgs: string[], options: RunCommandOptions) => {
     await runCommand(commandName, inputArgs, options);
@@ -85,7 +86,8 @@ if (config && config.commands) {
     const cmd = program
       .command(`${commandDef.name} [input...]`)
       .description(commandDef?.description ?? 'No description provided')
-      .option('-d, --dry-run', 'Show the prompt without sending');
+      .option('-d, --dry-run', 'Show the prompt without sending')
+      .option('-c, --copy', 'Copy response to clipboard');
 
     // Add parameter-specific options
     if (commandDef.params) {
@@ -165,6 +167,7 @@ async function runCommand(
 
     const result = await runner.run(commandName, {
       dryRun: options.dryRun as boolean,
+      copy: options.copy as boolean,
       params,
       input,
     });

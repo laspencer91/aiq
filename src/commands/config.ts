@@ -79,7 +79,7 @@ export class ConfigCommandModule extends CommandModule {
   }
 
   private async initConfig(): Promise<void> {
-    if (await this.configManager.exists()) {
+    if (this.configManager.exists()) {
       const { overwrite } = await inquirer.prompt<OverwriteAnswer>([
         {
           type: 'confirm',
@@ -241,7 +241,7 @@ export class ConfigCommandModule extends CommandModule {
     }
 
     // Save config
-    await this.configManager.save(newConfig);
+    this.configManager.save(newConfig);
 
     console.log(chalk.green(`\n✅ Configuration saved!`));
     console.log(chalk.dim(`   Config location: ~/.aiq/config.json`));
@@ -284,7 +284,7 @@ export class ConfigCommandModule extends CommandModule {
           name: 'cmd',
           description: 'Get terminal command only',
           prompt:
-            'Provide ONLY the terminal command for: {input}\nNo explanation, just the command.',
+            'Provide ONLY the terminal command for: {input}\nNo explanation, just the command. No formatting. Raw text only.',
         },
         {
           name: 'fix',
@@ -393,7 +393,7 @@ export class ConfigCommandModule extends CommandModule {
     const defaultProviderConfig = providerMetadata?.defaultConfig || { name: selectedProviderId };
     const defaultConfig = this.getDefaultConfig(defaultProviderConfig);
 
-    await this.configManager.save(defaultConfig);
+    this.configManager.save(defaultConfig);
     console.log(chalk.green('✅ Config reset to defaults'));
     console.log(chalk.yellow('   Remember to set your API key!'));
   }

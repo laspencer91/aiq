@@ -11,6 +11,8 @@ export abstract class CommandModule {
    * Initializes a command module.
    * This static method creates an instance of the specific subclass it's called on,
    * injects dependencies, and registers commands.
+   *
+   * Add some comments
    */
   public static init<T extends CommandModule>(
     this: new () => T,
