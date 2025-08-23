@@ -17,7 +17,7 @@ export interface GeminiProviderConfig extends BaseProviderConfig {
   apiKey: '${GEMINI_API_KEY}',
   model: 'gemini-2.5-flash',
   temperature: 0.6,
-  maxTokens: 1200,
+  maxTokens: 1800,
 })
 export class GeminiProvider extends IAiProvider<GeminiProviderConfig> {
   private baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
@@ -84,7 +84,7 @@ export class GeminiProvider extends IAiProvider<GeminiProviderConfig> {
         data.candidates.length === 0 ||
         !data.candidates[0].content.parts?.length
       ) {
-        console.log(JSON.stringify(data));
+        console.log('\n' + JSON.stringify(data));
 
         if (data.candidates[0]?.finishReason === 'MAX_TOKENS') {
           throw new UserError(
