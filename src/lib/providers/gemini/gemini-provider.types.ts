@@ -17,6 +17,7 @@ export interface GeminiResponse {
         text: string;
       }>;
     };
+    finishReason?: Omit<string, 'MAX_TOKENS'> | 'MAX_TOKENS';
   }>;
   error?: {
     message: string;

@@ -16,8 +16,8 @@ export interface GeminiProviderConfig extends BaseProviderConfig {
   name: 'gemini',
   apiKey: '${GEMINI_API_KEY}',
   model: 'gemini-2.5-flash',
-  temperature: 0.7,
-  maxTokens: 500,
+  temperature: 0.6,
+  maxTokens: 1200,
 })
 export class GeminiProvider extends IAiProvider<GeminiProviderConfig> {
   private baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
@@ -84,7 +84,15 @@ export class GeminiProvider extends IAiProvider<GeminiProviderConfig> {
         data.candidates.length === 0 ||
         !data.candidates[0].content.parts?.length
       ) {
-        throw new UserError('No response from Gemini', 'Try rephrasing your prompt');
+        console.log(JSON.stringify(data));
+
+        if (data.candidates[0]?.finishReason === 'MAX_TOKENS') {
+          throw new UserError(
+            'MAX_TOKEN Response from Gemini',
+            'Try increasing your token count - "aiq config open" to edit config.',
+          );
+        }
+        throw new UserError('No response from Gemini', 'Try rephrasing your prompt.');
       }
       const text = data.candidates[0].content.parts[0].text;
       return text.trim();
