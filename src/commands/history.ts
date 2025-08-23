@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import { HistoryManager } from '../lib/history-manager';
 import { CommandRunner } from '../lib/command-runner';
 import { Config, UserError } from '../types';
+import { copyToClipboard } from '../lib/utils';
 
 export function historyCommands(program: Command, runner: CommandRunner, config: Config): void {
   const history = program.command('history').description('Manage command history');
@@ -46,9 +47,10 @@ export function historyCommands(program: Command, runner: CommandRunner, config:
   program
     .command('last')
     .description('Show last command response')
-    .action(async () => {
+    .option('-c, --copy', 'Copy last response to clipboard')
+    .action(async (options: { copy: boolean }) => {
       try {
-        await showLast(config);
+        await showLast(config, options.copy as boolean);
       } catch (error) {
         handleError(error);
       }
@@ -185,7 +187,7 @@ async function clearHistory(config: Config): Promise<void> {
   console.log(chalk.green('✅ History cleared'));
 }
 
-async function showLast(config: Config): Promise<void> {
+async function showLast(config: Config, copy = false): Promise<void> {
   if (!config.history?.enabled) {
     console.log(chalk.yellow('History is disabled in config'));
     return;
@@ -201,7 +203,12 @@ async function showLast(config: Config): Promise<void> {
 
   const date = new Date(last.timestamp);
   console.log(chalk.dim(`\nLast command: ${last.command} (${date.toLocaleString()})\n`));
-  console.log(last.response);
+  console.log(chalk.cyan(last.response));
+
+  if (copy) {
+    console.log('');
+    copyToClipboard(last.response);
+  }
 }
 
 async function replayCommand(id: string, runner: CommandRunner, config: Config): Promise<void> {
